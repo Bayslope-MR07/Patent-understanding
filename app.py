@@ -341,9 +341,25 @@ def index():
     return render_template("index.html", result=result, answer=answer)
 
 
-from flask_cors import CORS  # CORS handle karne ke liye
+from flask_cors import CORS
 
-CORS(app)  # ye allow karega cross-origin requests
+# CORS configuration for frontend
+CORS(app, resources={r"/*": {"origins": ["https://patent-understanding-frontend.onrender.com", "http://localhost:3000", "http://127.0.0.1:3000"]}}, supports_credentials=True)
+
+@app.after_request
+def add_cors_headers(response):
+    origin = request.headers.get("Origin")
+    allowed = [
+        "https://patent-understanding-frontend.onrender.com",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000"
+    ]
+    if origin and (origin in allowed or origin.endswith(".onrender.com")):
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization"
+        response.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS,PUT,DELETE"
+    return response
 
 
 @app.route("/api/start-analysis", methods=["POST"])
