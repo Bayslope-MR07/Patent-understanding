@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patent Understanding Assistant</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.8s ease-out forwards; }
+    pre {
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      line-height: 1.6;
+      color: #1f2937;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-r from-blue-400 via-blue-300 to-green-500 flex items-center justify-center p-6 relative">
+
+  <!-- Hidden input to store sidebar state -->
+  <input type="hidden" id="sidebar-state" value="{% if answer or request.form.get('question') %}open{% else %}closed{% endif %}">
+
+  <!-- Main Content -->
+  <div class="bg-white/90 backdrop-blur-md shadow-2xl rounded-2xl p-10 w-full max-w-5xl space-y-8 fade-in">
+    
+    <!-- Title -->
+    <h1 class="text-4xl font-extrabold text-center bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent drop-shadow-lg font-['Inter']">
+      Patent Understanding Assistant
+    </h1>
+
+    <!-- Upload / Link Row -->
+    <form method="POST" enctype="multipart/form-data" class="flex flex-col md:flex-row gap-4 items-end">
+      <div class="flex-1">
+        <label class="block font-semibold text-gray-700 font-['Inter']">Upload PDF / DOCX:</label>
+        <input type="file" name="file" class="mt-2 p-3 border border-gray-300 rounded-lg w-full shadow-sm focus:ring-2 focus:ring-green-400"/>
+      </div>
+      <div class="flex-1">
+        <label class="block font-semibold text-gray-700 font-['Inter']">Enter Link or Patent Number:</label>
+        <input type="text" name="link"
+       value="{{ request.form.get('link', '') }}"
+       placeholder="Enter patent link or Patent Number(US29382B2)"
+       class="mt-2 p-3 border border-gray-300 rounded-lg w-full shadow-sm focus:ring-2 focus:ring-blue-400"/>
+
+      </div>
+      <div>
+        <button type="submit" class="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 font-['Inter']">
+          📄 Extract Patent Info
+        </button>
+      </div>
+    </form>
+
+    <!-- Result Display -->
+    {% if result %}
+    <div id="result-div" class="p-6 bg-gray-100/80 border rounded-xl max-h-[70vh] overflow-y-auto shadow-inner relative">
+      <h2 class="font-bold text-gray-800 mb-3 text-xl font-['Inter']">📖 Document Information:</h2>
+      <pre class="whitespace-pre-wrap">{{ result }}</pre>
+      <!-- Full Screen Button -->
+      <button onclick="toggleFullScreen()" class="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-600 font-['Inter']">
+        ⛶ Full Screen
+      </button>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <!-- Q&A Floating Button -->
+  <button id="qna-button" class="fixed bottom-10 right-10 bg-indigo-500 text-white p-4 rounded-full shadow-lg hover:bg-indigo-600 transform transition duration-300 hover:scale-105 font-['Inter']">
+    💬 Q&A
+  </button>
+
+  <!-- Q&A Sidebar -->
+  <div id="qna-sidebar" class="fixed top-0 right-0 h-full w-96 bg-white/90 backdrop-blur-md shadow-2xl p-6 transform translate-x-full transition-transform duration-300 ease-in-out overflow-y-auto">
+    <button id="close-qna" class="absolute top-4 right-4 text-gray-600 hover:text-gray-800 font-['Inter']">
+      ❌
+    </button>
+    <h2 class="text-2xl font-bold text-gray-800 mb-4 font-['Inter']">Ask a Question</h2>
+    <!-- QnA Form -->
+    <form method="POST" class="space-y-5">
+      <div>
+        <label class="block font-semibold text-gray-700 font-['Inter']">Ask a Question about Uploaded Document/Link:</label>
+        <input type="text" name="question" 
+       value="{{ request.form.get('question', '') }}"
+       placeholder="Enter your question"
+       class="mt-2 p-3 border border-gray-300 rounded-lg w-full shadow-sm focus:ring-2 focus:ring-indigo-400"/>
+      </div>
+      <button type="submit" class="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg w-full transform transition duration-300 hover:scale-105 font-['Inter']">
+        💬 Ask Question
+      </button>
+    </form>
+    <!-- Answers -->
+    {% if answer %}
+    <div class="mt-6 p-5 bg-green-100/80 border rounded-xl overflow-y-auto shadow-inner">
+      <h2 class="font-bold text-gray-800 mb-2 text-lg font-['Inter']">✅ Answer to Your Question:</h2>
+      <pre class="whitespace-pre-wrap">{{ answer }}</pre>
+    </div>
+    {% endif %}
+  </div>
+
+  <script>
+    // Toggle Q&A Sidebar
+    const qnaButton = document.getElementById('qna-button');
+    const qnaSidebar = document.getElementById('qna-sidebar');
+    const closeQna = document.getElementById('close-qna');
+
+    qnaButton.addEventListener('click', () => {
+      qnaSidebar.classList.toggle('translate-x-full');
+    });
+
+    closeQna.addEventListener('click', () => {
+      qnaSidebar.classList.add('translate-x-full');
+    });
+
+    // Automatically open sidebar based on hidden input
+    const sidebarState = document.getElementById('sidebar-state').value;
+    if (sidebarState === 'open') {
+      qnaSidebar.classList.remove('translate-x-full');
+    }
+
+    // Toggle Full Screen for Result
+    function toggleFullScreen() {
+      const elem = document.getElementById('result-div');
+      if (!document.fullscreenElement) {
+        elem.requestFullscreen().catch(err => {
+          alert(`Error attempting to enable full-screen mode: ${err.message}`);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+  </script>
+
+</body>
+</html>

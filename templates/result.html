@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Patent Analysis Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>✅ Analysis Results</h1>
+    <h2>📄 Summary</h2>
+    <p>{{ summary }}</p>
+    <h2>💡 Analogy</h2>
+    <p>{{ analogy }}</p>
+    <h2>📘 Difficult Terms Explained</h2>
+    <ul>
+        {% for term, definition in terms.items() %}
+            <li><b>{{ term }}</b>: {{ definition }}</li>
+        {% endfor %}
+    </ul>
+    <a href="/">🔙 Back</a>
+</body>
+</html>

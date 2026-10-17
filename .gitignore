@@ -1,0 +1,23 @@
+# Environment variables (CRITICAL: Do not commit keys to GitHub)
+.env
+.env.*
+!.env.example
+
+# Virtual Environments
+venv/
+.venv/
+ENV/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Flask Session
+flask_session/
+.sixth/
+
+# OS metadata
+.DS_Store
+Thumbs.db
